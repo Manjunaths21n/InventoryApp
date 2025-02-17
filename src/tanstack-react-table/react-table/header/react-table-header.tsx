@@ -1,12 +1,12 @@
 import { flexRender, Header, Table } from '@tanstack/react-table';
 import { StyledHeaderItem, StyledHeaderItemWrapper, StyledHeaderWrapper } from './header-style';
-import { IStoreColumn } from '../types';
 import { horizontalListSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSSProperties, memo, useMemo, useContext } from 'react';
 import { TableFilter } from './filter';
 import { ReatTableContext } from '../context';
+import { IItemInfo } from '../../store';
 
-export const DraggableTableHeader = memo(({ header }: { header: Header<IStoreColumn, unknown> }) => {
+export const DraggableTableHeader = memo(({ header }: { header: Header<IItemInfo, unknown> }) => {
     const { attributes, isDragging, listeners, setNodeRef, transform } =
         useSortable({
             id: header.column.id,
@@ -24,7 +24,6 @@ export const DraggableTableHeader = memo(({ header }: { header: Header<IStoreCol
         zIndex: isDragging ? 1 : 0,
     }), [isDragging, transform, header.column]);
 
-    console.log('header', header.column.getIsSorted());
 
     return (
         <StyledHeaderItem key={header.id} ref={setNodeRef} style={style}>
@@ -104,8 +103,7 @@ export const DraggableTableHeader = memo(({ header }: { header: Header<IStoreCol
         </StyledHeaderItem >
     );
 });
-export const ReactTableHeader = memo(({ table, columnOrder }: { columnOrder: string[], table: Table<IStoreColumn> }) => {
-    console.log('header wrapper');
+export const ReactTableHeader = memo(({ table, columnOrder }: { columnOrder: string[], table: Table<IItemInfo> }) => {
 
     return (
         <StyledHeaderWrapper>

@@ -1,10 +1,10 @@
 import styled from 'styled-components';
+import { StyledButton } from '../common-styles';
 
 export const StyledTableWrapper = styled.div`
     border: 1px solid gray;
     border-radius: 5px;
-    height: 500px;
-    width: 100%
+    width: 100%;
 `;
 
 export const StyledTextBox = styled.input`
@@ -12,7 +12,7 @@ export const StyledTextBox = styled.input`
     height: 20px;
 `
 
-export const StyledActionButtons = styled.button`
+export const StyledActionButtons = styled(StyledButton)`
     margin: 0px 2px;
 
 `

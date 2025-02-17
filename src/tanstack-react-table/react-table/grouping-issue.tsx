@@ -19,7 +19,7 @@ import { closestCenter, DndContext, DragEndEvent, KeyboardSensor, MouseSensor, T
 import { arrayMove, horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable'
 import { StyledHeaderWrapper, StyledHeaderItemWrapper, StyledHeaderItem } from './header/header-style'
 import { DraggableTableHeader, ReactTableHeader } from './header/react-table-header'
-import { IStoreColumn } from './types'
+import { IItemInfo } from './types'
 import { MockData } from '../store'
 import { ReactTableBody, StyledBodyItem, StyledBodyItemWrapper, StyledBodyWrapper } from './body'
 import { StyledTableWrapper } from './style'
@@ -29,7 +29,7 @@ import { ReactTableFooter } from './footer'
 export function GroupingIssue() {
     const rerender = React.useReducer(() => ({}), {})[1]
 
-    const columns = React.useMemo<ColumnDef<IStoreColumn>[]>(
+    const columns = React.useMemo<ColumnDef<IItemInfo>[]>(
         () => [
 
             {

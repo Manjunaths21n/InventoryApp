@@ -1,7 +1,7 @@
 import { Table, flexRender } from '@tanstack/react-table';
-import { IStoreColumn } from '../types';
+import { IItemInfo } from '../types';
 
-export const ReactTableFooter = ({ table }: { table: Table<IStoreColumn> }) => {
+export const ReactTableFooter = ({ table }: { table: Table<IItemInfo> }) => {
 
     return (<div>
         {table.getFooterGroups().map(footerGroup => (

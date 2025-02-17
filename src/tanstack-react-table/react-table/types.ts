@@ -1,15 +1,8 @@
-import { IStoreBillInfo } from "../store/constants";
+import { ColumnDef } from "@tanstack/react-table";
+import { IStoreBillInfo } from "../store";
 
-export type IStoreColumn = {
-    itemId: string;
-    itemName: string;
-    quantity: number;
-    costPerItem: number;
-    totalCost: number;
-}
-
-export type IStoreSalesColumn = IStoreBillInfo & IStoreColumn;
-export type IStoreOrdersColumn = IStoreBillInfo & IStoreColumn;
+export type IStoreSalesColumn = IStoreBillInfo;
+export type IStoreOrdersColumn = IStoreBillInfo;
 
 export type Person = {
     CreatedDate: string;
@@ -23,3 +16,14 @@ export type TableMeta = {
     editIndex: number;
 };
 
+
+export interface INestedTableProps {
+    renderNestedTable?: (args: any) => React.JSX.Element
+}
+
+export interface ITableProps extends INestedTableProps {
+    data: any[];
+    columnsInfo: ColumnDef<any, any>[];
+    editRowIndex?: number;
+    height?: string;
+}

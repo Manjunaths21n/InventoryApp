@@ -1,10 +1,13 @@
 import { memo, useCallback, useMemo, useState } from 'react';
-import { useReactTable, getCoreRowModel, getPaginationRowModel, CellContext, getFilteredRowModel, getSortedRowModel, Row, SortingState, getGroupedRowModel, getExpandedRowModel, ColumnDef } from '@tanstack/react-table';
+import {
+    useReactTable, getCoreRowModel, getPaginationRowModel, CellContext, getFilteredRowModel, getSortedRowModel, Row,
+    SortingState, getGroupedRowModel, getExpandedRowModel
+} from '@tanstack/react-table';
 import { ReactTableBody } from './body';
 import { ReactTableFooter } from './footer';
-import { StyledActionButtons, StyledTableWrapper, StyledTextBox } from './style';
+import { StyledTableWrapper, StyledTextBox } from './style';
 import { ReactTableHeader } from './header';
-import { IStoreColumn, Person, TableMeta } from './types';
+import { ITableProps, Person, TableMeta } from './types';
 import { restrictToHorizontalAxis, restrictToParentElement } from '@dnd-kit/modifiers'
 import { arrayMove } from '@dnd-kit/sortable'
 import {
@@ -18,35 +21,7 @@ import {
     useSensors,
 } from '@dnd-kit/core'
 import { IReactTableContext, ReatTableContext } from './context';
-
-export const TableActionButtons = (props: CellContext<Person, unknown> & { onSave(): void, onCancel(): void, onEdit(index: number): void }) => {
-    const { row: { index }, table: { options: { meta } }, onCancel, onEdit, onSave } = props;
-
-    const allowEdit = (meta as TableMeta)?.editIndex === index;
-    const _onSave = () => {
-        onSave();
-
-    };
-    const _onCancel = () => {
-        onCancel();
-    }
-    const _onEdit = () => {
-        onEdit(index);
-    }
-
-
-    return (<>{
-        allowEdit ?
-
-            <div>
-                <StyledActionButtons onClick={_onSave}>save</StyledActionButtons>
-                <StyledActionButtons onClick={_onCancel}>cancel</StyledActionButtons>
-            </div> :
-            <StyledActionButtons onClick={_onEdit}>edit</StyledActionButtons>
-    }</>)
-
-}
-
+import { IItemInfo } from '../store';
 
 export const PersonTableCellRender = (props: CellContext<Person, unknown> & { onChange(): void }) => {
     const { row: { index }, cell: { getValue, }, table: { options: { meta } } } = props;
@@ -55,7 +30,7 @@ export const PersonTableCellRender = (props: CellContext<Person, unknown> & { on
     const allowEdit = (meta as TableMeta)?.editIndex === index;
 
     const _onChange = (arg: any) => {
-        console.log(arg)
+
         setValue(arg.target?.value ?? '');
     };
 
@@ -70,17 +45,17 @@ export const PersonTableCellRender = (props: CellContext<Person, unknown> & { on
 
 }
 
-export const StoreTableCellRender = (props: CellContext<IStoreColumn, unknown> & { onChange(): void }) => {
+export const StoreTableCellRender = (props: CellContext<IItemInfo, unknown> & { onChange(): void }) => {
     const { row: { index }, cell: { getValue, }, table: { options: { meta } }, column: { id: columnId } } = props;
 
     const [value, setValue] = useState<any>(getValue());
     const allowEdit = (meta as TableMeta)?.editIndex === index;
 
     const _onChange = (arg: any) => {
-        console.log(arg)
+
         setValue(arg.target?.value ?? '');
     };
-    console.log(columnId);
+
 
     return (<>{
         allowEdit ?
@@ -93,8 +68,8 @@ export const StoreTableCellRender = (props: CellContext<IStoreColumn, unknown> &
 
 
 
-// const defaultDevVMData: IStoreColumn[] = MockData;
-// const defaultStoreData: IStoreColumn[] = [];
+// const defaultDevVMData: IItemInfo[] = MockData;
+// const defaultStoreData: IItemInfo[] = [];
 
 export interface IColumnsInfo {
     columnName: string;
@@ -109,7 +84,7 @@ export const filterFn = (row: Row<Person>, columnId: string, filterValue: Record
 
     const rowValue = row.getValue<string>(columnId).toLowerCase();
     const { value1, value2, operator } = filterValue;
-    console.log(rowValue);
+
     if (operator === 'AND') {
         return rowValue.includes(value1) && rowValue.includes(value2);
     } else {
@@ -117,12 +92,12 @@ export const filterFn = (row: Row<Person>, columnId: string, filterValue: Record
     }
 }
 
-export const storeFilterFn = (row: Row<IStoreColumn>, columnId: string, filterValue: Record<string, string>) => {
+export const storeFilterFn = (row: Row<IItemInfo>, columnId: string, filterValue: Record<string, string>) => {
     if (!filterValue) return true; // No filter applied
 
     const rowValue = row.getValue<string>(columnId).toLowerCase();
     const { value1, value2, operator } = filterValue;
-    console.log(rowValue);
+
     if (operator === 'AND') {
         return rowValue.includes(value1) && rowValue.includes(value2);
     } else {
@@ -130,8 +105,8 @@ export const storeFilterFn = (row: Row<IStoreColumn>, columnId: string, filterVa
     }
 }
 
-export const ReactTable = memo((props: { data: any[], columnsInfo: ColumnDef<any, any>[], editRowIndex?: number }) => {
-    const { columnsInfo, data, editRowIndex } = props;
+export const ReactTable = memo((props: ITableProps) => {
+    const { columnsInfo, data, editRowIndex, renderNestedTable, height } = props;
     const [sorting, setSorting] = useState<SortingState>([])
 
     const [columnOrder, setColumnOrder] = useState<string[]>(columnsInfo?.map(c => c.id ?? '') ?? []);
@@ -179,7 +154,6 @@ export const ReactTable = memo((props: { data: any[], columnsInfo: ColumnDef<any
         });
     }, [table]);
 
-    console.log(table.getState());
     const sensors = useSensors(
         useSensor(MouseSensor, {}),
         useSensor(TouchSensor, {}),
@@ -187,8 +161,6 @@ export const ReactTable = memo((props: { data: any[], columnsInfo: ColumnDef<any
     )
 
     const reactTableContextValue: IReactTableContext = useMemo(() => ({ onColumnGroup }), [onColumnGroup]);
-
-
 
     return (
 
@@ -198,10 +170,10 @@ export const ReactTable = memo((props: { data: any[], columnsInfo: ColumnDef<any
             onDragEnd={handleDragEnd}
             sensors={sensors}
         >
-            <StyledTableWrapper className="p-2">
+            <StyledTableWrapper className="p-2" style={{ height: height ?? '500px' }}>
                 <ReatTableContext.Provider value={reactTableContextValue} >
                     <ReactTableHeader table={table} columnOrder={columnOrder} />
-                    <ReactTableBody table={table} columnOrder={columnOrder} />
+                    <ReactTableBody table={table} columnOrder={columnOrder} renderNestedTable={renderNestedTable} />
                     <ReactTableFooter table={table} />
                 </ReatTableContext.Provider>
             </StyledTableWrapper>

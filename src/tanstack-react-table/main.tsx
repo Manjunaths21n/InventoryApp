@@ -1,14 +1,31 @@
-import { memo, useCallback, useRef, useState } from 'react';
-import { styled } from 'styled-components';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { ReactTable } from './react-table';
-import { IInitialState, storeItemsData, storeSalesData } from './store/constants';
-import { getStorSalesColumns, getStorOrderColumns, getStorColumns } from './react-table/columns';
+import {
+    IInitialState, storeItemsColumnInfo, IColumnNamesInfo, storeSalesColumnInfo, storeBuyColumnInfo, selectSoreItems, selectSoresales, selectSoreOrders,
+    IStoreItemsInfo,
+    IItemInfo,
+    updateSalesItems,
+    ColumnKeyMapper,
+    updateOrdersItems
+} from './store';
+import { preparecolumns } from './react-table/columns';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { StyledContainer, StyledNavePanel, StyledSalesButton, StyledOrderButton, StyledItemsButton, StyledTableWrapper, StyledPageHeaderWrapper, StyledAddRecordButton, StyledFlyoutWarpper } from './main-styles';
+import { ItemsTableAdd, TableActionButtons } from './action-buttons';
+import { ItemsRenderer } from './item-parts';
 
 export const TanstackReactTable = memo(() => {
 
+    const dispatch = useAppDispatch()
+    const soreItems = useAppSelector(selectSoreItems);
+    const soresales = useAppSelector(selectSoresales);
+    const soreOrders = useAppSelector(selectSoreOrders);
+
     const [activeTable, setActiveTable] = useState<keyof IInitialState>('storeItems')
     const [editIndex, setEditIndex] = useState(-1);
+    const [showFlyout, setShowFlyout] = useState(false);
     const actionTypeRef = useRef('');
+    const modifyBillIdRef = useRef('');
 
     const onSave = () => {
         actionTypeRef.current = '';
@@ -24,30 +41,74 @@ export const TanstackReactTable = memo(() => {
         setEditIndex(index);
     }
 
-    const columnsInfo = useRef({
-        storSalesColumns: getStorSalesColumns({ onEdit, onCancel, onSave }),
-        storOrderColumns: getStorOrderColumns({ onEdit, onCancel, onSave }),
-        storColumns: getStorColumns({ onEdit, onCancel, onSave }),
-    })
+    const actionColumn = useCallback((allowRowSelection: boolean) => (preparecolumns({
+        columns: [
+            { columnDisplayName: 'Action', columnName: 'Action', cell: (args: any) => <TableActionButtons {...{ ...args, onSave, onEdit, onCancel, allowRowSelection }} /> }
+        ], enableFilter: false, enableGrouping: false, enableSorting: false
+    })), []);
+
+    const getColumnInfo = useCallback((column: IColumnNamesInfo[]) => (
+        preparecolumns({
+            columns: column.filter(({ showColumn }) => showColumn).map(
+                ({ columnDisplayName, columnName }) => ({ columnDisplayName, columnName })
+            ),
+            enableFilter: true, enableGrouping: true, enableSorting: true
+        })
+    ), []);
+
+    const columnsInfo = useMemo(() => ({
+        storSalesColumns: [...actionColumn(true), ...getColumnInfo(storeSalesColumnInfo)],
+        storOrderColumns: [...actionColumn(true), ...getColumnInfo(storeBuyColumnInfo)],
+        storColumns: [...actionColumn(false), ...getColumnInfo(storeItemsColumnInfo)],
+    }), [actionColumn, getColumnInfo]);
 
     const onSalesButton = useCallback(() => {
         setActiveTable('storeSales');
+        setEditIndex(-1);
     }, []);
 
     const onBuyButton = useCallback(() => {
         setActiveTable('storeOrders');
+        setEditIndex(-1);
     }, []);
 
     const onStoreButton = useCallback(() => {
         setActiveTable('storeItems');
+        setEditIndex(-1);
     }, []);
 
     const handleAddRecord = useCallback(() => {
         if (actionTypeRef.current !== 'Add') {
             actionTypeRef.current = 'Add';
             // setTableData(preState => ([{ costPerItem: 0, itemId: 'a1', itemName: 'asd', quantity: 0, totalCost: 0 }, ...preState]));
-            setEditIndex(0);
+            // setEditIndex(0);
+            if (activeTable === 'storeSales') {
+                setShowFlyout(true);
+                // dispatch(addSales(getDummyStoreSalesData()))
+            } else if (activeTable === 'storeOrders') {
+                setShowFlyout(true);
+                // dispatch(addOrders(getDummyStoreSalesData()))
+
+            }
         }
+    }, [activeTable]);
+
+    const handleAddItems = useCallback((billId: string) => {
+        modifyBillIdRef.current = billId;
+        setShowFlyout(true);
+    }, []);
+
+    const onFlyoutSuccess = useCallback((val: IItemInfo[]) => {
+        setShowFlyout(false);
+        dispatch(
+            activeTable === 'storeSales' ?
+                updateSalesItems({ billId: modifyBillIdRef.current, items: val }) :
+                updateOrdersItems({ billId: modifyBillIdRef.current, items: val })
+        );
+    }, [activeTable, dispatch]);
+
+    const onFlyoutCancel = useCallback(() => {
+        setShowFlyout(false);
     }, []);
 
 
@@ -59,60 +120,69 @@ export const TanstackReactTable = memo(() => {
                 <StyledItemsButton isSelected={activeTable === 'storeItems'} onClick={onStoreButton}>Store</StyledItemsButton>
             </StyledNavePanel>
             {activeTable === 'storeItems' && <StyledTableWrapper >
-                <StyledAddRecordButton onClick={handleAddRecord}>Add Record</StyledAddRecordButton>
-                <ReactTable columnsInfo={columnsInfo.current.storColumns} data={storeItemsData} editRowIndex={editIndex} />
+                <StyledPageHeaderWrapper />
+                <ReactTable columnsInfo={columnsInfo.storColumns} data={soreItems} editRowIndex={editIndex} />
             </StyledTableWrapper>
             }
             {activeTable === 'storeOrders' && <StyledTableWrapper >
-                <StyledAddRecordButton onClick={handleAddRecord}>Add Record</StyledAddRecordButton>
-                <ReactTable columnsInfo={columnsInfo.current.storOrderColumns} data={storeSalesData} editRowIndex={editIndex} />
+                <StyledPageHeaderWrapper>
+
+                    <StyledAddRecordButton onClick={handleAddRecord}>Add Stock In</StyledAddRecordButton>
+                </StyledPageHeaderWrapper>
+                <ReactTable
+                    columnsInfo={columnsInfo.storOrderColumns}
+                    data={soreOrders}
+                    editRowIndex={editIndex}
+                    renderNestedTable={(args: any) => { return (<div><NestedItemsTable items={args[ColumnKeyMapper.ITEMS]} handleAddItems={handleAddItems} billId={args[ColumnKeyMapper.BILL_ID]} /></div>); }}
+                />
             </StyledTableWrapper>
             }
             {activeTable === 'storeSales' && <StyledTableWrapper >
-                <StyledAddRecordButton onClick={handleAddRecord}>Add Record</StyledAddRecordButton>
-                <ReactTable columnsInfo={columnsInfo.current.storSalesColumns} data={storeSalesData} editRowIndex={editIndex} />
+                <StyledPageHeaderWrapper>
+                    <StyledAddRecordButton onClick={handleAddRecord}>Add Stock Out</StyledAddRecordButton>
+                </StyledPageHeaderWrapper>
+                <ReactTable
+                    columnsInfo={columnsInfo.storSalesColumns}
+                    data={soresales}
+                    editRowIndex={editIndex}
+                    renderNestedTable={(args: any) => { return (<div><NestedItemsTable items={args.items} handleAddItems={handleAddItems} billId={args.billId} /></div>); }}
+                />
             </StyledTableWrapper>
             }
+            {showFlyout && (
+                <StyledFlyoutWarpper data-show={showFlyout ? "true" : "false"} className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg">
+                    <ItemsRenderer onCancel={onFlyoutCancel} onSuccess={onFlyoutSuccess} />
+
+                </StyledFlyoutWarpper>
+            )}
         </StyledContainer>
     );
 });
 
-export const StyledContainer = styled.div`
-display: flex;
-`;
-export const StyledTableWrapper = styled.div`
-display: flex;
-flex-flow: column;
-`;
-export const StyledAddRecordButton = styled.button`
-    width: 100px;
-    height: 40px;
-    background-color: #c7ebeb;
-`
-export const StyledNavePanel = styled.div`
-    height: 100vh;
-    border-right: 1px solid;
-    margin-right: 10px;
-    width: 200px;
-`
+export const NestedItemsTable = memo((props: { items: IStoreItemsInfo, handleAddItems: (billId: string) => void, billId: string }) => {
 
-export const StyledButtons = styled.div`
-    margin: 10px;
-    padding:5px;
-    border-radius: 10px;
-    height: 30px;
-    width: auto;
-`
+    const { items, handleAddItems, billId } = props;
 
-export const StyledSalesButton = styled(StyledButtons) <{ isSelected: boolean }>`
-    background-color: ${({ isSelected }) => (isSelected ? 'lightgreen' : '#1af11a')};
-`
+    const itemsList = Object.values(items);
 
+    const actionColumn = useMemo(() => (preparecolumns({
+        columns: [
+            { columnDisplayName: 'Action', columnName: 'Action', cell: (args: any) => <ItemsTableAdd {...{ ...args, onClick: handleAddItems, billId }} /> }
+        ], enableFilter: false, enableGrouping: false, enableSorting: false
+    })), [handleAddItems]);
 
-export const StyledOrderButton = styled(StyledButtons) <{ isSelected: boolean }>`
-    background-color: ${({ isSelected }) => (isSelected ? 'lightblue' : '#26bbec')};
-`
+    const getColumnInfo = useCallback((column: IColumnNamesInfo[]) => (
+        [...actionColumn, ...preparecolumns({
+            columns: column.filter(({ showColumn }) => showColumn).map(
+                ({ columnDisplayName, columnName }) => ({ columnDisplayName, columnName })
+            ),
+            enableFilter: true, enableGrouping: true, enableSorting: true
+        })]
+    ), [actionColumn]);
 
-export const StyledItemsButton = styled(StyledButtons) <{ isSelected: boolean }>`
-    background-color: ${({ isSelected }) => (isSelected ? '#f8e1b2' : '#f7c35d')};
-` 
+    return <ReactTable
+        columnsInfo={getColumnInfo(storeItemsColumnInfo)}
+        data={itemsList}
+        height='auto'
+    />
+});

@@ -16,3 +16,8 @@ export const tableStore = configureStore({
 
 export type TableStoreType = typeof tableStore;
 export type RootState = ReturnType<TableStoreType['getState']>;
+export type AppDispatch = TableStoreType["dispatch"]
+
+export const selectSoreItems = (state: RootState) => { return Object.values(state.storeItem); }
+export const selectSoresales = (state: RootState) => { return Object.values(state.storeSales); }
+export const selectSoreOrders = (state: RootState) => { return Object.values(state.storeOrder); }

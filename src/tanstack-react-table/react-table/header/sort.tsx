@@ -5,10 +5,10 @@ import ReactDOM from 'react-dom/client'
 import {
     Header
 } from '@tanstack/react-table'
-import { IStoreColumn } from '../types'
+import { IItemInfo } from '../types'
 
 
-export function Sort({ header }: { header: Header<IStoreColumn, unknown> }) {
+export function Sort({ header }: { header: Header<IItemInfo, unknown> }) {
 
     return (
         <div

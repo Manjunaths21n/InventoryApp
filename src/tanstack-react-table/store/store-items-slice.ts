@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { appInitialState } from './constants';
+import { appInitialState } from './constant-values';
 
 
 export const storeItemsSlice = createSlice({
@@ -7,10 +7,10 @@ export const storeItemsSlice = createSlice({
     name: 'storeItems',
     reducers: {
         updateItemQuantitesById: (state, action: PayloadAction<{ itemId: string, newQuantites: number }>) => {
-            state.items[action.payload.itemId].quantity = action.payload.newQuantites;
+            state[action.payload.itemId].itemsQuantity = action.payload.newQuantites;
         },
         updateItemCostById: (state, action: PayloadAction<{ itemId: string, newCost: number }>) => {
-            state.items[action.payload.itemId].quantity = action.payload.newCost;
+            state[action.payload.itemId].itemsQuantity = action.payload.newCost;
         }
     }
 })

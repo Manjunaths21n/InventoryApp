@@ -1,4 +1,6 @@
+import { Provider } from 'react-redux'
 import { TanstackReactTable } from './tanstack-react-table'
+import { tableStore } from './tanstack-react-table/store'
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -26,7 +28,10 @@ function App() {
   //   </p>
   // </>
   return (
-    <TanstackReactTable />
+    <Provider store={tableStore}>
+
+      <TanstackReactTable />
+    </Provider>
   )
 }
 
