@@ -80,15 +80,8 @@ export const TanstackReactTable = memo(() => {
     const handleAddRecord = useCallback(() => {
         if (actionTypeRef.current !== 'Add') {
             actionTypeRef.current = 'Add';
-            // setTableData(preState => ([{ costPerItem: 0, itemId: 'a1', itemName: 'asd', quantity: 0, totalCost: 0 }, ...preState]));
-            // setEditIndex(0);
-            if (activeTable === 'storeSales') {
+            if (['storeSales', 'storeOrders'].includes(activeTable)) {
                 setShowFlyout(true);
-                // dispatch(addSales(getDummyStoreSalesData()))
-            } else if (activeTable === 'storeOrders') {
-                setShowFlyout(true);
-                // dispatch(addOrders(getDummyStoreSalesData()))
-
             }
         }
     }, [activeTable]);

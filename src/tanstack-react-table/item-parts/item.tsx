@@ -74,8 +74,7 @@ export const AddItems = memo((props: IAddItem) => {
         if (addNewItem === 'save') {
             setFieldsValue(defaultItem);
         }
-
-    }, [addNewItem]);
+    }, [addNewItem, defaultItem]);
 
     return (
         <div style={{ display: 'flex', justifyContent: 'space-between', flexFlow: 'column' }}>
